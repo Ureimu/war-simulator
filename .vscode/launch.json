@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Program",
+            "program": "${workspaceFolder}/dist/main.js",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "args": [
+                "--inspect",
+                "dev",
+                "-r",
+                "source-map-support/register",
+            ]
+        }
+    ]
+}

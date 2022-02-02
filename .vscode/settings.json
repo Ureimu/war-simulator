@@ -1,0 +1,88 @@
+{
+    "[javascript]": {
+        "editor.formatOnSave": false
+    },
+    "[json]": {
+        "editor.formatOnSave": true
+    },
+    "[typescript]": {
+        "editor.formatOnSave": true
+    },
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+    },
+    "editor.formatOnSave": true,
+    "editor.renderWhitespace": "boundary",
+    "files.encoding": "utf8",
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+    "search.exclude": {
+        "_book/**": true,
+        ".rpt2_cache/**": true,
+        "**/.nyc_output": true,
+        "**/coverage": true,
+        "dist/**": true,
+        "docs/**": true,
+        "node_modules/**": true,
+        "typings/**": true
+    },
+    "files.exclude": {
+        ".history/**": true
+    },
+    "typescript.tsdk": "./node_modules/typescript/lib",
+    "cSpell.words": [
+        "authed",
+        "BODYPART",
+        "bodyparts",
+        "bodysetting",
+        "buble",
+        "Buildable",
+        "COOLDOWN",
+        "Coord",
+        "crzytrane",
+        "dont",
+        "dynamicmarket",
+        "ENWS",
+        "estree",
+        "Grafana",
+        "Iclass",
+        "Ifun",
+        "importee",
+        "Inte",
+        "lcov",
+        "MAPTOOL",
+        "mincut",
+        "mongodb",
+        "mwcarhit",
+        "mwcarhlt",
+        "nodent",
+        "nuker",
+        "openttd",
+        "Parens",
+        "Prefs",
+        "pserver",
+        "REGEN",
+        "Scorpior",
+        "screepers",
+        "screepsbot",
+        "screepsmod",
+        "simplebot",
+        "splus",
+        "toolbelt",
+        "treemap",
+        "typeof",
+        "Unlicense",
+        "Ureium's",
+        "WNES",
+        "zeswarm"
+    ],
+    "mochaExplorer.files": [
+        "dist/test-integration.bundle.js",
+        "dist/test-unit.bundle.js"
+    ],
+    "mochaExplorer.require": [
+        "ts-node/register",
+        "test/setup-mocha.js"
+    ],
+    "search.useIgnoreFiles": false,
+}
