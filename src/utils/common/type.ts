@@ -1,9 +1,3 @@
-export interface BaseObjectInfo {
-    x: number;
-    y: number;
-    type: string;
-    mineralType?: string;
-}
 export type ControllerLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 // type from screeps.d.ts
 export type BuildableStructureConstant =

@@ -1,4 +1,3 @@
-import * as assert from "assert";
 import { PriorityQueue } from "utils/PriorityQueue/priorityQueue";
 
 // 上面的userData需要自己在根目录创建，示例参照根目录的authInfoSample.ts

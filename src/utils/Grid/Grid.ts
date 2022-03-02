@@ -90,6 +90,9 @@ export class Grid {
         opts = this.managePosOpts(this.basePosOpts, opts);
         const { x, y } = pos;
         const coordList = [];
+        if (range === 0) {
+            coordList.push(pos);
+        }
         for (let i = -range; i <= range; i++) {
             for (let j = -range; j <= range; j++) {
                 const coord = { x: x + i, y: y + j };
@@ -347,6 +350,7 @@ export class Grid {
      * @memberof Grid
      */
     public getMinDistance(startPoint: Coord, endPointList: Coord[]): number {
+        if (endPointList.length === 0) return 0;
         return Math.min(...endPointList.map(endPoint => this.getDistance(startPoint, endPoint)));
     }
 
@@ -417,6 +421,16 @@ export class Grid {
                         h(n)是节点n距离终点的预计代价，这也就是A*算法的启发函数。
                         */
                         // console.log(adNode);
+                        // console.log(
+                        //     `${
+                        //         firstNode.cost +
+                        //         adNode.weight +
+                        //         pathFinderOpts.AStarWeight *
+                        //             this.getMinDistance(this.prasePosStr(adNode.to), allEndPoint)
+                        //     },${firstNode.cost},${adNode.weight},${pathFinderOpts.AStarWeight},${
+                        //         this.prasePosStr(adNode.to).x
+                        //     },${allEndPoint.toString()}`
+                        // );
                         openQueue.enqueue({
                             parent: firstNode.name,
                             priority:
@@ -602,8 +616,8 @@ export class Grid {
                 width: areaRange.xMax - areaRange.xMin,
                 height: areaRange.yMax - areaRange.yMin
             };
-            for (let x = 0; x <= 49 - areaSize.width; x++) {
-                for (let y = 0; y <= 49 - areaSize.height; y++) {
+            for (let x = 0; x <= this.mapSize.xMax - areaSize.width; x++) {
+                for (let y = 0; y <= this.mapSize.xMax - areaSize.height; y++) {
                     // x,y是在地图内所有可能的坐标值
                     const measureArea = originArea.coordList.map(coord => {
                         return { x: coord.x - areaRange.xMin + x, y: coord.y - areaRange.yMin + y };

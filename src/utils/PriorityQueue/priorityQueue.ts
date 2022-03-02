@@ -1,4 +1,3 @@
-/* eslint-disable no-bitwise */
 // https://segmentfault.com/a/1190000022131550
 export interface PriorityNode {
     priority: number;

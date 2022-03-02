@@ -85,4 +85,5 @@
         "test/setup-mocha.js"
     ],
     "search.useIgnoreFiles": false,
+    "npm-scripts.showStartNotification": false,
 }

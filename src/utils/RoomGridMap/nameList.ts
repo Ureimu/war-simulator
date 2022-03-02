@@ -1,9 +1,11 @@
-import { StructureConstant } from "utils/common/type";
+import { ObjectConstant } from "object/type";
+import { BuildableStructureConstant, StructureConstant } from "utils/common/type";
 import { SpecifiedStructureNameList, StructureTypeFromSpecifiedStructureName } from "./type";
 export function getStructureTypeBySpecifiedName<T extends SpecifiedStructureNameList<StructureConstant>>(
     name: T
 ): StructureTypeFromSpecifiedStructureName<T>;
-export function getStructureTypeBySpecifiedName(name: string): string;
+export function getStructureTypeBySpecifiedName(name: BuildableStructureConstant): BuildableStructureConstant;
+export function getStructureTypeBySpecifiedName(name: ObjectConstant): ObjectConstant;
 export function getStructureTypeBySpecifiedName<T extends SpecifiedStructureNameList<StructureConstant>>(
     name: T
 ): StructureTypeFromSpecifiedStructureName<T> {

@@ -1,11 +1,10 @@
-import { AnyRoomObjects } from "node-ts-screeps-api/dist/src/rawApiType/roomObjects";
+import { AnyObject } from "object/type";
 import { BuildableStructureConstant, StructureConstant } from "utils/common/type";
 import { Coord, GridPosition } from "utils/Grid/type";
 
 export interface RoomGridPosition extends GridPosition {
     terrain: "plain" | "swamp" | "wall";
-    objects: AnyRoomObjects[];
-    layout: LayoutStructure[];
+    objects: AnyObject[];
 }
 
 export interface LayoutStructure extends Coord {
@@ -65,3 +64,5 @@ export type StructureTypeFromSpecifiedStructureName<T extends SpecifiedStructure
         : T extends SpecifiedStructureNameList<"road">
         ? "road"
         : T;
+
+export type StructureType = "container" | "link" | "road";
