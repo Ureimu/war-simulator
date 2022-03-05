@@ -1,10 +1,9 @@
-import * as assert from "assert";
 import { spawnSync } from "child_process";
 import { testControl } from "Control";
 import { unlinkSync } from "fs";
 import { Game } from "Game";
 import { configure, getLogger } from "log4js";
-import sharp, { concurrency } from "sharp";
+import { concurrency } from "sharp";
 import { copyIt } from "utils/fs/copy";
 import { removeDir } from "utils/fs/removeDir";
 import { checkPath } from "utils/pathCheck";
@@ -36,9 +35,9 @@ describe("api", () => {
 
             checkPath(["out", "cache", "movie"]);
             concurrency(4);
-            const game = new Game({ x: 30, y: 30 });
+            const game = new Game({ x: 80, y: 80 });
             await game.map.drawMap("out/testPic.png");
-            const road = game.map.findPath({ x: 2, y: 2 }, { x: 28, y: 28 }, 0);
+            const road = game.map.findPath({ x: 2, y: 2 }, { x: 70, y: 70 }, 0);
             let time = new Date().getTime();
             // 猜想：需要一次布局至少10个图片，这些布局图片才能被正常缓存。
             // 很不幸，这个猜想似乎是正确的，谜一样的bug
@@ -56,8 +55,8 @@ describe("api", () => {
                         const coord2 = road.path[i - 10];
                         const coord3 = road.path[i - 5];
                         game.map.removeStructure("road", coord3);
-                        game.map.removeStructure("rampart", coord3);
-                        game.map.addStructure("rampart", 8, 1, coord);
+                        // game.map.removeStructure("rampart", coord3);
+                        // game.map.addStructure("rampart", 8, 1, coord);
                         game.map.addStructure("road", 8, 1, coord2);
                     }
                     // if (i < 70)

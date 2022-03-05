@@ -12,6 +12,7 @@ export async function getObjectPictureBuffer(name: string): Promise<Buffer> {
     const sizeList: { [name: string]: number } = {
         wall: coordUnitWidth,
         swamp: coordUnitWidth,
+        plain: coordUnitWidth,
         extractor: coordUnitWidth,
         container: (coordUnitWidth / 4) * 3
     };

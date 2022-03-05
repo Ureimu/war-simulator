@@ -43,9 +43,10 @@ export class DrawMap {
         // 一次布局超过166（？）个图片在测试中会导致stack overflow error（没有任何被抛出的报错），只好进行多次读写。这个数量不确定，感觉和机器性能有关.
         // 但是多次读写对运行时间影响不大。
         // 参见 https://github.com/lovell/sharp/issues/2286
-        // TODO 0.30.2之后的版本修复了这个bug。
+        // 0.30.2之后的版本修复了这个bug。设置成5000只是方便看进度。
+        const logger = getLogger("work");
         const startTime = Date.now();
-        const onceNum = 100;
+        const onceNum = 5000;
         const compLength = compositeInput.length;
         const blender: sharp.Blend | undefined = blenderTest;
         if (drawBaseSize) {
@@ -55,6 +56,7 @@ export class DrawMap {
                 .toFile(outputPath);
             // console.log(label);
         }
+
         compositeInput.forEach(val => (val.blend = blender));
         let bufferCache = await sharp(outputPath).toBuffer();
         let lastEndTime = Date.now();
@@ -80,6 +82,7 @@ export class DrawMap {
                     ).toFixed(2)},${((firstInput.left ?? 0) / coordUnitWidth).toFixed(2)}]`
                 });
             }
+            logger.info(`label:${label ?? ""},num:${sliceData.length}`);
             // await sleep(500);
             // console.log(profilerStr(lastEndTime, Date.now(), sliceData.length, "[composite]"));
             lastEndTime = Date.now();
@@ -133,13 +136,15 @@ export class DrawMap {
             ).filter(val => val.input);
             await this.compositeLayout(compositeInput, outputPath, mapSize, bar, "[drawTerrainLayout]");
         } else {
+            // BUG 没有图片正确的放置于对应位置。
             const compositeInput = updateData.queue
                 .map(id => {
                     const { x, y } = { x: id % xMax, y: Math.floor(id / xMax) };
                     return {
                         top: y * coordUnitWidth,
                         left: x * coordUnitWidth,
-                        input: terrainPicBuffer[this.terrainMap[terrain[id] as "0" | "1" | "2" | "3"]]
+                        input: terrainPicBuffer[this.terrainMap[terrain[id] as "0" | "1" | "2" | "3"]],
+                        type: this.terrainMap[terrain[id] as "0" | "1" | "2" | "3"]
                     };
                 })
                 .filter(val => val.input);
@@ -153,7 +158,12 @@ export class DrawMap {
             const logger = getLogger("updateTerrain");
             logger.info(
                 compositeInput
-                    .map(val => `[${(val.left / coordUnitWidth).toFixed(2)},${(val.top / coordUnitWidth).toFixed(2)}]`)
+                    .map(
+                        val =>
+                            `${val.type}:[${(val.left / coordUnitWidth).toFixed(2)},${(
+                                val.top / coordUnitWidth
+                            ).toFixed(2)},length:${val.input.length}]`
+                    )
                     .toString()
             );
             await this.compositeLayout(
@@ -431,11 +441,7 @@ export class DrawMap {
             };
         });
         const logger = getLogger("updateVisual");
-        logger.info(
-            `canvas:${compositeDataList
-                .map(val => `[${(val.left / coordUnitWidth).toFixed(2)},${(val.top / coordUnitWidth).toFixed(2)}]`)
-                .toString()}`
-        );
+        logger.info(`canvas:${compositeDataList.map(val => `[length:${val.input.length}]`).toString()}`);
 
         await this.compositeLayout(compositeDataList, outputPath, false, bar, "[drawVisualData]");
     }
@@ -476,28 +482,28 @@ export class DrawMap {
         progressBar?.setTotal(
             updateData.queue.length + picNum + this.calcNumOfObjToDraw(objects, updateData) + visualDataList.length
         );
+        // await this.drawVisualData(
+        //     updateData.queue.map(id => {
+        //         const svg = new SvgCode({ xMin: 0, xMax: size[0], yMin: 0, yMax: size[1] });
+        //         svg.rectStyle.opacity = 0.999;
+        //         svg.rectStyle.fill = "#fff";
+        //         svg.rect({
+        //             xMin: id % size[0],
+        //             xMax: (id % size[0]) + 1,
+        //             yMin: Math.floor(id / size[0]),
+        //             yMax: Math.floor(id / size[0]) + 1
+        //         });
+        //         return svg;
+        //     }),
+        //     progressBar,
+        //     outputPath
+        // );
 
         await this.drawTerrainLayout(terrain, size, progressBar, outputPath, updateData, blenderTest);
         await this.drawObjectLayout(objects, progressBar, outputPath, updateData);
 
         await this.drawVisualData(visualDataList, progressBar, outputPath);
-        await this.drawVisualData(
-            updateData.queue.map(id =>
-                new SvgCode({ xMin: 0, xMax: size[0], yMin: 0, yMax: size[1] })
-                    .rect(
-                        {
-                            xMin: id % size[0],
-                            xMax: (id % size[0]) + 1,
-                            yMin: Math.floor(id / size[0]),
-                            yMax: Math.floor(id / size[0]) + 1
-                        },
-                        { "fill-opacity": 1, fill: "#fff" }
-                    )
-                    .text("rem", { x: id % size[0], y: Math.floor(id / size[0]) })
-            ),
-            progressBar,
-            outputPath
-        );
+
         // 清空update queue
         updateData.queue = [];
         progressBar?.stop();
