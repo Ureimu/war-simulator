@@ -1,6 +1,4 @@
-import { convertPngToSvg } from "convert";
 import sharp from "sharp";
-import { sleep } from "utils/sleep";
 
 describe("convertTest", () => {
     it("runs", async () => {

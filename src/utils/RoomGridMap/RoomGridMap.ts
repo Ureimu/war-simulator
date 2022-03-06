@@ -35,15 +35,6 @@ export class RoomGridMap extends Grid {
             totalLimit: { [level in ControllerLevel]: number };
         };
     } = {};
-    public getObjects(): AnyObject[] {
-        return this.grid
-            .map((xStack, x) => {
-                return xStack.map((pos, y) => {
-                    return pos.objects;
-                });
-            })
-            .flat(2);
-    }
     public coordToID(coord: Coord): number {
         return coord.x + coord.y * this.gridSize.x;
     }
@@ -78,7 +69,7 @@ export class RoomGridMap extends Grid {
     public constructor(
         size: { x: number; y: number },
         public readonly terrainData: string,
-        public objects: AnyObject[],
+        public objects: Map<string, AnyObject>,
         public readonly roomName: string,
         public readonly name: string
     ) {
@@ -91,7 +82,7 @@ export class RoomGridMap extends Grid {
                     ...pos,
                     cost: terrainCost,
                     terrain: this.terrainMap[terrainData[x + y * size.x] as "0" | "1" | "2" | "3"],
-                    objects: this.getObjectsInPos({ x, y }, objects)
+                    objects: this.getObjectsInPos({ x, y }, Array.from(objects.values()))
                 };
             });
         });
@@ -130,149 +121,46 @@ export class RoomGridMap extends Grid {
         return numList.totalLimit[level] - numList.total[level];
     }
 
-    /**
-     * 添加建筑到layout，总会返回当前rcl等级限制的最大建筑数量与当前的建筑总数的差值，
-     * 如果超限会返回负数且不会添加任何建筑。
-     *
-     * @param {BuildableStructureConstant} type
-     * @param {ControllerLevel} level
-     * @param {number} priority
-     * @param {...Coord[]} structures
-     * @returns {number}
-     * @memberof RoomGridMap
-     */
-    public addStructure(
-        type: BuildableStructureConstant,
-        level: ControllerLevel,
-        priority: number,
-        ...structures: Coord[]
-    ): number {
-        const structureType = type;
-        const exceededNum = this.getStatsOfStructure(structureType, level, structures.length);
-        if (exceededNum < 0) return exceededNum;
-        const typedStructures = structures
-            .filter(i => {
-                const gridPos = this.gridPos(i);
-                if (
-                    gridPos.cost === this.MAX_COST &&
-                    structureType !== "rampart" &&
-                    structureType !== "road" &&
-                    !(structureType === "extractor" && gridPos.objects.some(j => j.type === "mineral"))
-                ) {
-                    return false;
-                }
-                if (gridPos.cost === this.roadCost && structureType !== "container" && type !== "rampart") {
-                    return false;
-                }
-                return true;
-            })
-            .map(i => {
-                return { ...i, type, levelToBuild: level, priority, id: _.uniqueId() };
-            });
-        typedStructures.forEach(structure => {
-            this.pushToUpdateQueue(structure);
-            const gridPos = this.gridPos(structure);
-            gridPos.objects.push(structure);
+    public createObjects(...objects: Omit<AnyObject, "id">[]): AnyObject[] {
+        const newObjectList: AnyObject[] = [];
+        objects.forEach(object => {
+            const newObject: AnyObject = { ...object, id: _.uniqueId() } as AnyObject;
+            this.pushToUpdateQueue(newObject);
+            this.objects.set(newObject.id, newObject);
+            const gridPos = this.gridPos(newObject);
             this.setCostForPos(gridPos);
+            newObjectList.push(newObject);
         });
-        return exceededNum;
+        return newObjectList;
     }
 
-    public addStructureByFillingLevel(
-        type: BuildableStructureConstant,
-        priority: (level: ControllerLevel, index: number, pos: Coord) => number,
-        structures: Coord[]
-    ): number {
-        const coords = structures.map(coord => {
-            return { x: coord.x, y: coord.y };
+    public deleteObjects(...objects: AnyObject[]): boolean[] {
+        const boolList: boolean[] = [];
+        objects.forEach(i => {
+            const bool1 = this.objects.delete(i.id);
+            this.pushToUpdateQueue(i);
+            if ([bool1].includes(false)) boolList.push(false);
+            else boolList.push(true);
         });
-        coords.reverse();
-        let pos = coords.pop();
-        let i = 0;
-        let j = 0;
-        let k = 0;
-        // console.log(`start ${coords.length}`);
-        while (pos) {
-            const level = i as ControllerLevel;
-            const exceededNum = this.addStructure(type, level, priority(level, k, pos), pos);
-            if (exceededNum >= 0) {
-                // console.log(`put level:${i}`);
-                j++;
-            }
-            if (exceededNum < 0 && i < 8) {
-                i++;
-                // console.log(`upgrade level:${i}`);
-                continue;
-            }
-            if (i >= 8 && exceededNum < 0) break;
-
-            k++;
-            // console.log(`str num:${k}`);
-            pos = coords.pop();
-        }
-        // console.log(`end ex:${j}`);
-        return j;
-    }
-
-    /**
-     * 从layout移除建筑，总会返回当前rcl等级限制的最大建筑数量与当前的建筑总数的差值.
-     *
-     * @param {SpecifiedStructureNameList<BuildableStructureConstant>} type
-     * @param {...Coord[]} structuresPos
-     * @returns {number}
-     * @memberof RoomGridMap
-     */
-    public removeStructure(type: BuildableStructureConstant, ...structuresPos: Coord[]): number {
-        let deleteNum = 0;
-        const structureType = type;
-        structuresPos.forEach(structure => {
-            const gridPos = this.gridPos(structure);
-            const objects = gridPos.objects;
-            const index = objects.findIndex(layoutStructure => layoutStructure.type === type);
-            if (index !== -1) {
-                const deletedStructure = objects.splice(index, 1)[0];
-                this.pushToUpdateQueue(gridPos);
-                this.setCostForPos(gridPos);
-                // TODO controller支持
-                this.getStatsOfStructure(structureType, 0 as ControllerLevel, -1);
-                deleteNum++;
-            }
-        });
-        const exceededNum = -deleteNum;
-        return exceededNum;
+        return boolList;
     }
 
     public getObjectsInPos(coord: Coord, objects?: AnyObject[]): AnyObject[] {
         const { x, y } = coord;
-        if (!objects) objects = this.objects;
+        if (!objects) objects = Array.from(this.objects.values());
         return objects.filter(anyObject => anyObject.x === x && anyObject.y === y);
     }
 
     public findObjects<T extends ObjectConstant>(type: T): SpecifiedObject<T>[] {
         const typed = anyObjectIsTyped(type);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return this.objects.filter<SpecifiedObject<T>>(typed);
+        return Array.from(this.objects.values()).filter<SpecifiedObject<T>>(typed);
     }
 
     private getCostByPos(pos: Coord): number {
         const gridPos = this.gridPos(pos);
-        const costList = gridPos.objects
-            .map(structure => {
-                const structureType = structure.type;
-                if (structureType === "rampart" || structureType === "container") {
-                    return -1;
-                } else if (structureType === "road") {
-                    return this.roadCost;
-                } else {
-                    return this.MAX_COST;
-                }
-            })
-            .filter(x => x > 0);
-        if (costList.length > 0) {
-            return Math.max(...costList);
-        } else {
-            return this.terrainCost[gridPos.terrain];
-        }
+
+        return this.terrainCost[gridPos.terrain];
     }
 
     private setCostForPos(pos: Coord): void {
@@ -297,10 +185,9 @@ export class RoomGridMap extends Grid {
      */
     public async drawMap(savePath: string): Promise<void> {
         const progressBar = this.createProgressBar("draw map");
-        this.objects = this.getObjects();
         await new DrawMap(this.mapSize).getVisual(
             this.terrainData,
-            this.objects,
+            Array.from(this.objects.values()),
             this.visualizeDataList,
             progressBar,
             savePath,
@@ -315,14 +202,13 @@ export class RoomGridMap extends Grid {
         if (this.test) {
             progressBar = this.createProgressBar(`update map ${label ?? ""}`);
         }
-        this.objects = this.getObjects();
         // 猜想：需要一次刷新多个object，drawMap才会正常工作
         // 很不幸，这个猜想似乎是正确的
 
         await new DrawMap(this.mapSize).updateObjectVisual(
             this.updateData,
             this.terrainData,
-            this.objects,
+            Array.from(this.objects.values()),
             this.visualizeDataList,
             this.test ? progressBar : undefined,
             savePath,

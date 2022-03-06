@@ -4,7 +4,6 @@ import { Coord, GridPosition } from "utils/Grid/type";
 
 export interface RoomGridPosition extends GridPosition {
     terrain: "plain" | "swamp" | "wall";
-    objects: AnyObject[];
 }
 
 export interface LayoutStructure extends Coord {
@@ -46,15 +45,6 @@ export type SpecifiedOutwardsStructureNameList<T extends StructureConstant> = T 
     : never;
 
 export type LayoutRequireList = [posStr: string, levelToBuild: number, priority: number][];
-
-export interface CacheLayoutData {
-    layout: formedLayout;
-    firstSpawn: {
-        pos: string;
-    };
-    centerPos: string;
-    freeSpacePosList: string[];
-}
 
 export type StructureTypeFromSpecifiedStructureName<T extends SpecifiedStructureNameList<StructureConstant>> =
     T extends SpecifiedStructureNameList<"container">
