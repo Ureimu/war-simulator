@@ -3,7 +3,9 @@ import { testControl } from "Control";
 import { unlinkSync } from "fs";
 import { Game } from "Game";
 import { configure, getLogger } from "log4js";
-import { concurrency } from "sharp";
+import sharp, { cache, concurrency } from "sharp";
+import { DrawMap } from "utils/blockVisual";
+import { getObjectPictureBuffer } from "utils/blockVisual/imgMap";
 import { copyIt } from "utils/fs/copy";
 import { removeDir } from "utils/fs/removeDir";
 import { checkPath } from "utils/pathCheck";
@@ -26,6 +28,7 @@ logger.level = "debug";
 describe("api", () => {
     it("runs", async () => {
         const mainFunction = async (): Promise<void> => {
+            cache(false); // 一定要不使用缓存！否则会有各种问题。
             console.profile();
             testControl();
             removeDir("movie");
@@ -35,9 +38,9 @@ describe("api", () => {
 
             checkPath(["out", "cache", "movie"]);
             concurrency(4);
-            const game = new Game({ x: 80, y: 80 });
+            const game = new Game({ x: 32, y: 32 });
             await game.map.drawMap("out/testPic.png");
-            const road = game.map.findPath({ x: 2, y: 2 }, { x: 70, y: 70 }, 0);
+            const road = game.map.findPath({ x: 2, y: 2 }, { x: 30, y: 30 }, 0);
             let time = new Date().getTime();
             // 猜想：需要一次布局至少10个图片，这些布局图片才能被正常缓存。
             // 很不幸，这个猜想似乎是正确的，谜一样的bug

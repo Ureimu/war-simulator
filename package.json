@@ -8,6 +8,7 @@
         "devTestIns": "rollup -c && node --inspect -r source-map-support/register dist/main.js dev",
         "devTest": "rollup -c && node -r source-map-support/register dist/main.js dev",
         "main": "rollup -c && mocha test/unit/main.test.ts",
+        "draw": "mocha test/unit/draw.test.ts",
         "convert": "rollup -c && mocha test/unit/convertTest.test.ts",
         "privateTest": "rollup -c && node -r source-map-support/register dist/main.js private",
         "lint": "eslint \"src/**/*.ts\"",

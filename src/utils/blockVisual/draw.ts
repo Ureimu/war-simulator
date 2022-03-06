@@ -179,7 +179,6 @@ export class DrawMap {
                     .toString()}`,
                 blenderTest
             );
-            // await sleep(1000);
         }
 
         return "ok";
