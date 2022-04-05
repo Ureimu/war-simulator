@@ -1,5 +1,5 @@
 import { MultiBar, Presets, SingleBar } from "cli-progress";
-import { AnyObject, ObjectConstant, SpecifiedObject } from "object/type";
+import { AnyObject, ObjectConstant, SpecifiedObject } from "Object/type";
 import sharp from "sharp";
 import { DrawMap } from "utils/blockVisual/draw";
 import { CONTROLLER_STRUCTURES } from "utils/common/constants";
@@ -121,14 +121,22 @@ export class RoomGridMap extends Grid {
         return numList.totalLimit[level] - numList.total[level];
     }
 
+    public updateObject(newObject: AnyObject, data?: Partial<AnyObject>): void {
+        this.pushToUpdateQueue(newObject);
+        this.setCostForPos(this.gridPos(newObject));
+        if (data) {
+            Object.assign(newObject, data);
+            this.pushToUpdateQueue(newObject);
+            this.setCostForPos(this.gridPos(newObject));
+        }
+    }
+
     public createObjects(...objects: Omit<AnyObject, "id">[]): AnyObject[] {
         const newObjectList: AnyObject[] = [];
         objects.forEach(object => {
             const newObject: AnyObject = { ...object, id: _.uniqueId() } as AnyObject;
-            this.pushToUpdateQueue(newObject);
+            this.updateObject(newObject);
             this.objects.set(newObject.id, newObject);
-            const gridPos = this.gridPos(newObject);
-            this.setCostForPos(gridPos);
             newObjectList.push(newObject);
         });
         return newObjectList;
@@ -138,7 +146,7 @@ export class RoomGridMap extends Grid {
         const boolList: boolean[] = [];
         objects.forEach(i => {
             const bool1 = this.objects.delete(i.id);
-            this.pushToUpdateQueue(i);
+            this.updateObject(i);
             if ([bool1].includes(false)) boolList.push(false);
             else boolList.push(true);
         });

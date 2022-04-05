@@ -1,4 +1,4 @@
-import { ObjectConstant } from "object/type";
+import { ObjectConstant } from "Object/type";
 import { BuildableStructureConstant, StructureConstant } from "utils/common/type";
 import { SpecifiedStructureNameList, StructureTypeFromSpecifiedStructureName } from "./type";
 export function getStructureTypeBySpecifiedName<T extends SpecifiedStructureNameList<StructureConstant>>(

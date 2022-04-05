@@ -1,6 +1,6 @@
 import { SingleBar } from "cli-progress";
 import { getLogger } from "log4js";
-import { AnyObject } from "object/type";
+import { AnyObject } from "Object/type";
 import sharp from "sharp";
 import { coordUnitWidth, picBasePath } from "utils/common/constants";
 import { Range } from "utils/common/type";
@@ -136,7 +136,6 @@ export class DrawMap {
             ).filter(val => val.input);
             await this.compositeLayout(compositeInput, outputPath, mapSize, bar, "[drawTerrainLayout]");
         } else {
-            // BUG 没有图片正确的放置于对应位置。
             const compositeInput = updateData.queue
                 .map(id => {
                     const { x, y } = { x: id % xMax, y: Math.floor(id / xMax) };
@@ -244,13 +243,28 @@ export class DrawMap {
             return objects.filter(obj => coord.x === obj.x && coord.y === obj.y);
         };
         const updateObj = updateData.queue.map(id2Coord).map(getObjByCoord).flat();
-        const squareUpdateRoad = _.flatten(
-            updateObj.map(obj => this.squarePos(obj, 1).map(getObjByCoord).flat())
-        ).filter(obj => obj.type === "road");
-        const updateRoadIdList = squareUpdateRoad
-            .map(coord2Id)
-            .filter(updateId => !updateData.queue.includes(updateId));
-        return Array.from(new Set(updateRoadIdList));
+        const angleList: number[] = [];
+        updateObj.map(obj =>
+            this.squarePos(obj, 1)
+                .map(getObjByCoord)
+                .flat()
+                .filter(obj1 => obj1.type === "road")
+                .forEach(cObj => {
+                    if (Math.abs(obj.x - cObj.x) + Math.abs(obj.y - cObj.y) === 2) {
+                        const id1 = coord2Id({ x: obj.x, y: cObj.y });
+                        const id2 = coord2Id({ x: cObj.x, y: obj.y });
+                        angleList.push(id1, id2);
+                    }
+                    angleList.push(coord2Id(cObj));
+                })
+        );
+        // const squareUpdateRoad = _.flatten(
+        //     updateObj.map(obj => this.squarePos(obj, 1).map(getObjByCoord).flat())
+        // ).filter(obj => obj.type === "road");
+        // const updateRoadIdList = squareUpdateRoad
+        //     .map(coord2Id)
+        //     .filter(updateId => !updateData.queue.includes(updateId));
+        return Array.from(new Set(angleList.filter(updateId => !updateData.queue.includes(updateId))));
     }
     public async drawObjectLayout(
         objects: AnyObject[],

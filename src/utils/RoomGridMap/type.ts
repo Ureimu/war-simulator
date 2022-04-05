@@ -1,4 +1,4 @@
-import { AnyObject } from "object/type";
+import { AnyObject } from "Object/type";
 import { BuildableStructureConstant, StructureConstant } from "utils/common/type";
 import { Coord, GridPosition } from "utils/Grid/type";
 
